@@ -20440,7 +20440,16 @@ function inspectImage(bytes) {
 // server/routes/admin.ts
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var notFound = () => new HttpError(404, "not_found", "Convite n\xE3o encontrado.");
-var linkFor = (ctx, token) => `${ctx.cfg.appUrl}/c/${token}`;
+var linkFor = (ctx, token) => {
+  try {
+    const origin = new URL(ctx.request.url).origin;
+    if (origin && origin !== "null") {
+      return `${origin}/c/${token}`;
+    }
+  } catch {
+  }
+  return `${ctx.cfg.appUrl}/c/${token}`;
+};
 async function loadInvitation(sql, id) {
   if (!UUID_RE.test(id)) throw notFound();
   const rows = await sql`select * from invitations where id = ${id}`;

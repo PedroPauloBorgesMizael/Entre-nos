@@ -36,10 +36,16 @@ export function InvitationDetailPage() {
     loadData();
   }, [id]);
 
+  const inviteLink = detail
+    ? (typeof window !== 'undefined'
+        ? `${window.location.origin}${detail.link.replace(/^https?:\/\/[^/]+/, '')}`
+        : detail.link)
+    : '';
+
   const handleCopy = async () => {
     if (!detail) return;
     try {
-      await navigator.clipboard.writeText(detail.link);
+      await navigator.clipboard.writeText(inviteLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -119,7 +125,7 @@ export function InvitationDetailPage() {
           <div style={{ fontSize: '0.85rem', color: 'var(--c-taupe)', marginBottom: 4, fontWeight: 500 }}>
             Link Exclusivo do Convite
           </div>
-          <div className="link-input-display">{detail.link}</div>
+          <div className="link-input-display">{inviteLink}</div>
         </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -137,7 +143,7 @@ export function InvitationDetailPage() {
             )}
           </Button>
 
-          <a href={detail.link} target="_blank" rel="noopener noreferrer">
+          <a href={inviteLink} target="_blank" rel="noopener noreferrer">
             <Button variant="ghost" size="small">
               <EyeIcon style={{ width: 14, height: 14 }} />
               Testar

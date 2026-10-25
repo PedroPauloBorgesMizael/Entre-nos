@@ -20,7 +20,15 @@ import type { Ctx, RouteHandler } from '../types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const notFound = () => new HttpError(404, 'not_found', 'Convite não encontrado.');
-const linkFor = (ctx: Ctx, token: string) => `${ctx.cfg.appUrl}/c/${token}`;
+const linkFor = (ctx: Ctx, token: string) => {
+  try {
+    const origin = new URL(ctx.request.url).origin;
+    if (origin && origin !== 'null') {
+      return `${origin}/c/${token}`;
+    }
+  } catch {}
+  return `${ctx.cfg.appUrl}/c/${token}`;
+};
 
 interface InvRow {
   id: string;
