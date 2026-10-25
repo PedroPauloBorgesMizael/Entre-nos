@@ -4,7 +4,11 @@ import { createServer } from 'node:http';
 import { createApp } from '../server/app';
 import { serveNode } from '../server/nodeAdapter';
 
-if (existsSync('.env.local')) process.loadEnvFile('.env.local');
+if (existsSync('.env.local')) {
+  process.loadEnvFile('.env.local');
+} else if (existsSync('.env')) {
+  process.loadEnvFile('.env');
+}
 
 const port = Number(process.env.DEV_API_PORT ?? 8787);
 const app = createApp();
