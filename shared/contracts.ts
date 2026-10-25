@@ -175,4 +175,6 @@ export interface ApiErrorBody {
   message: string;
   fieldErrors?: Record<string, string>;
   retryAfterSeconds?: number;
+  debug?: string;
+  details?: string;
 }

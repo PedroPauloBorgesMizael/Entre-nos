@@ -17,7 +17,56 @@ interface Route {
 }
 
 const ID = '([^/]+)';
+const getDiagnostic: RouteHandler = async (_ctx) => {
+  const envStatus: Record<string, string> = {};
+  const check = (name: string, isHash = false) => {
+    const val = process.env[name]?.trim();
+    if (!val) {
+      envStatus[name] = 'AUSENTE';
+    } else if (isHash && !/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(val)) {
+      envStatus[name] = 'FORMATO_INVALIDO (precisa ser hash bcrypt)';
+    } else if (name === 'ADMIN_SESSION_SECRET' && val.length < 32) {
+      envStatus[name] = `CURTO_DEMAIS (${val.length} caracteres, precisa >= 32)`;
+    } else {
+      envStatus[name] = 'OK';
+    }
+  };
+
+  check('DATABASE_URL');
+  check('APP_URL');
+  check('ADMIN_EMAIL');
+  check('ADMIN_USERNAME');
+  check('ADMIN_INITIAL_PASSWORD_HASH', true);
+  check('ADMIN_RECOVERY_QUESTION_1');
+  check('ADMIN_RECOVERY_QUESTION_2');
+  check('ADMIN_RECOVERY_ANSWER_1_HASH', true);
+  check('ADMIN_RECOVERY_ANSWER_2_HASH', true);
+  check('ADMIN_SESSION_SECRET');
+  check('RESEND_API_KEY');
+
+  let dbStatus = 'não configurado (DATABASE_URL ausente)';
+  const dbUrl = process.env.DATABASE_URL?.trim();
+  if (dbUrl) {
+    try {
+      const sql = getDb(dbUrl);
+      const rows = await sql`select 1 as ok`;
+      dbStatus = rows[0]?.ok === 1 ? 'CONECTADO_COM_SUCESSO' : 'RESPOSTA_INESPERADA';
+    } catch (err) {
+      dbStatus = `FALHA: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  }
+
+  return json({
+    status: 'diagnostico_entre_nos',
+    variaveis_ambiente: envStatus,
+    banco_de_dados: dbStatus,
+  });
+};
+
 const routes: Route[] = [
+  // diagnóstico (não expõe senhas nem hashes)
+  { method: 'GET', pattern: /^\/diagnostic$/, handler: getDiagnostic, access: 'none' },
+
   // público (somente por token)
   { method: 'GET', pattern: new RegExp(`^/invite/${ID}$`), handler: pub.getInvite, access: 'none' },
   { method: 'GET', pattern: new RegExp(`^/invite/${ID}/photo$`), handler: pub.getPhoto, access: 'none' },
@@ -123,7 +172,7 @@ export function createApp(options: AppOptions = {}): (request: Request) => Promi
 
   return async function handle(request: Request): Promise<Response> {
     try {
-      const url = new URL(request.url);
+      const url = new URL(request.url, 'http://localhost');
       const path = url.pathname.replace(/^\/api(?=\/)/, '').replace(/\/+$/, '') || '/';
 
       let matchedPath = false;
@@ -133,13 +182,22 @@ export function createApp(options: AppOptions = {}): (request: Request) => Promi
         matchedPath = true;
         if (route.method !== request.method) continue;
 
+        if (path === '/diagnostic') {
+          return await route.handler(
+            { request, url, cfg: {} as Config, sql: {} as Sql, fetchImpl, waitUntil },
+            [],
+          );
+        }
+
         let cfg: Config;
         try {
           cfg = getConfig();
         } catch (e) {
           if (e instanceof ConfigError) {
             console.error('[config]', e.message);
-            throw new HttpError(503, 'server_misconfigured', 'O servidor não está configurado corretamente.');
+            throw new HttpError(500, 'server_misconfigured', `Variável de ambiente ausente ou inválida: ${e.message}`, {
+              debug: e.message,
+            });
           }
           throw e;
         }
@@ -160,26 +218,29 @@ export function createApp(options: AppOptions = {}): (request: Request) => Promi
       }
 
       if (isDbError(e)) {
-        console.error('[db] Falha na comunicação com o banco de dados:', e instanceof Error ? e.message : e);
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('[db] Falha na comunicação com o banco de dados:', msg);
         return errorResponse(
           new HttpError(
-            503,
+            500,
             'database_unavailable',
-            'O banco de dados está iniciando ou temporariamente indisponível. Aguarde alguns instantes e tente novamente.',
-            { retryAfterSeconds: 3 }
+            `Falha na comunicação com o banco de dados: ${msg}`,
+            { retryAfterSeconds: 3, debug: msg }
           ),
           { 'retry-after': '3' }
         );
       }
 
-      // Tratamento preventivo para qualquer outro erro inesperado: nunca devolver 500 bruto
-      console.error('[api] Erro tratado na API:', e instanceof Error ? `${e.name}: ${e.message}` : e);
+      // Detalhes completos expostos no erro para diagnóstico rápido
+      const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+      const stack = e instanceof Error ? e.stack : undefined;
+      console.error('[api] Erro na API:', msg, stack);
       return errorResponse(
         new HttpError(
-          503,
-          'service_unavailable',
-          'Serviço temporariamente indisponível. Aguarde alguns instantes e tente novamente.',
-          { retryAfterSeconds: 3 }
+          500,
+          'service_error',
+          `Erro no servidor: ${msg}`,
+          { retryAfterSeconds: 3, debug: msg, details: stack || msg }
         ),
         { 'retry-after': '3' }
       );
