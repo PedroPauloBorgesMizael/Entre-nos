@@ -70,8 +70,8 @@ test.describe('Fluxo Público do Convite (Entre Nós)', () => {
     const newBox2 = await noBtn.boundingBox();
     expect(newBox2!.x !== newBox1!.x || newBox2!.y !== newBox1!.y).toBe(true);
 
-    // O indicador de tentativas deve estar visível
-    await expect(page.locator('text=Tentativas no botão "Não"')).toBeVisible();
+    // O contador de tentativas permanece oculto para a convidada (visível apenas no painel admin)
+    await expect(page.locator('text=Tentativas no botão "Não"')).not.toBeVisible();
   });
 
   test('fluxo completo: Sim -> Pétalas -> Escolha de Data -> Sugestão -> Animação da Carta -> Resumo', async ({ page }) => {

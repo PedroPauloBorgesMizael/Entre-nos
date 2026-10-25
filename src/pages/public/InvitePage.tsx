@@ -29,7 +29,6 @@ export function InvitePage() {
 
   // Tela 1: Botão Não fugitivo
   const [noPos, setNoPos] = useState<Point | null>(null);
-  const [noAttemptsCount, setNoAttemptsCount] = useState(0);
   const reporterRef = useRef<AttemptReporter | null>(null);
   const yesBtnRef = useRef<HTMLButtonElement | null>(null);
   const noBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -103,7 +102,6 @@ export function InvitePage() {
 
       // 1. Registra tentativa de forma confiável e idempotente
       reporterRef.current?.record();
-      setNoAttemptsCount((prev) => prev + 1);
 
       // 2. Calcula nova posição dentro dos limites da janela evitando elementos vitais
       const btnEl = noBtnRef.current;
@@ -276,20 +274,6 @@ export function InvitePage() {
                 Não
               </button>
             </div>
-
-            {noAttemptsCount > 0 && (
-              <p
-                style={{
-                  marginTop: 24,
-                  fontSize: '0.82rem',
-                  color: 'var(--c-rose)',
-                  fontStyle: 'italic',
-                }}
-                aria-live="polite"
-              >
-                Tentativas no botão "Não": {noAttemptsCount}
-              </p>
-            )}
           </>
         )}
 
