@@ -14,8 +14,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "types": ["node", "vite/client"]
+    "noEmit": true
   },
   "include": ["src", "shared", "server", "api", "scripts", "tests", "vite.config.mts", "playwright.config.ts"]
 }
