@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Petals } from '../../components/Petals';
 import { LetterAnimation } from '../../components/LetterAnimation';
-import { RoseMark, CheckIcon } from '../../components/icons';
+import { RoseMark, CheckIcon, HeartShape } from '../../components/icons';
 import { publicApi, ApiError } from '../../lib/api';
 import { AttemptReporter } from '../../lib/attemptReporter';
 import { pickPosition, type Point, type Rect } from '../../lib/noButton';
@@ -185,9 +185,11 @@ export function InvitePage() {
   if (loading) {
     return (
       <main className="invite-page">
-        <div className="invite-card">
-          <div className="btn__spinner" style={{ width: 28, height: 28, color: 'var(--c-wine)', margin: '40px 0' }} />
-          <p style={{ color: 'var(--c-taupe)' }}>Abrindo convite…</p>
+        <div className="invite-card invite-card--loading">
+          <div className="invite-loading-heart">
+            <HeartShape style={{ width: 40, height: 40, color: 'var(--c-rose)' }} />
+          </div>
+          <p className="invite-loading-label">Abrindo convite…</p>
         </div>
       </main>
     );
@@ -417,7 +419,7 @@ export function InvitePage() {
                 onClick={handleConfirm}
                 data-testid="btn-confirm-date"
               >
-                Mandar nosso date para o universo 💌
+                {isSubmitting ? 'Enviando nosso date ao universo…' : 'Mandar nosso date para o universo 💌'}
               </Button>
             </div>
           </>

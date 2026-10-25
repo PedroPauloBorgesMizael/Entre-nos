@@ -157,17 +157,24 @@ img {
   pointer-events: none;
 }
 .btn__spinner {
-  width: 1em;
-  height: 1em;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  animation: spin 0.8s linear infinite;
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  animation: spin 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
   }
+}
+.btn__content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: inherit;
 }
 
 /* ---------- campos ---------- */
