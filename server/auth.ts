@@ -131,10 +131,30 @@ export function assertSameOrigin(request: Request, cfg: Config): void {
   const origin = request.headers.get('origin');
   if (!origin) throw forbidden;
 
+  // 1. Confere com appUrl configurado
   const appOrigin = new URL(cfg.appUrl).origin;
   if (origin === appOrigin) return;
 
-  // Em desenvolvimento local, aceita requisições vindas de localhost / 127.0.0.1
+  // 2. Confere com o próprio Origin da requisição atual (mesmo host e protocolo)
+  try {
+    const reqOrigin = new URL(request.url).origin;
+    if (origin === reqOrigin) return;
+  } catch {}
+
+  // 3. Em URLs da Vercel (preview deployments ou domínios *.vercel.app do projeto)
+  try {
+    const parsedOrigin = new URL(origin);
+    const parsedReq = new URL(request.url);
+    if (
+      parsedOrigin.protocol === 'https:' &&
+      parsedOrigin.hostname.endsWith('.vercel.app') &&
+      parsedReq.hostname.endsWith('.vercel.app')
+    ) {
+      return;
+    }
+  } catch {}
+
+  // 4. Em desenvolvimento local, aceita requisições vindas de localhost / 127.0.0.1
   if (!cfg.isProduction) {
     try {
       const parsed = new URL(origin);

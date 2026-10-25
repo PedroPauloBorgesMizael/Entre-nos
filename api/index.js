@@ -2101,6 +2101,19 @@ function assertSameOrigin(request, cfg) {
   if (!origin) throw forbidden;
   const appOrigin = new URL(cfg.appUrl).origin;
   if (origin === appOrigin) return;
+  try {
+    const reqOrigin = new URL(request.url).origin;
+    if (origin === reqOrigin) return;
+  } catch {
+  }
+  try {
+    const parsedOrigin = new URL(origin);
+    const parsedReq = new URL(request.url);
+    if (parsedOrigin.protocol === "https:" && parsedOrigin.hostname.endsWith(".vercel.app") && parsedReq.hostname.endsWith(".vercel.app")) {
+      return;
+    }
+  } catch {
+  }
   if (!cfg.isProduction) {
     try {
       const parsed = new URL(origin);
