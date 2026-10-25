@@ -23,7 +23,17 @@ function required(env: NodeJS.ProcessEnv, name: string): string {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const appUrl = required(env, 'APP_URL').replace(/\/+$/, '');
+  let appUrl = env.APP_URL?.trim();
+  if (!appUrl) {
+    if (env.VERCEL_PROJECT_PRODUCTION_URL) {
+      appUrl = `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    } else if (env.VERCEL_URL) {
+      appUrl = `https://${env.VERCEL_URL}`;
+    } else {
+      throw new ConfigError('Variável de ambiente ausente: APP_URL');
+    }
+  }
+  appUrl = appUrl.replace(/\/+$/, '');
   let parsed: URL;
   try {
     parsed = new URL(appUrl);
