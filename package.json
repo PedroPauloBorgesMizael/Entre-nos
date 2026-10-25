@@ -11,7 +11,7 @@
     "dev": "concurrently -k -n api,web -c magenta,cyan \"npm:dev:api\" \"npm:dev:web\"",
     "dev:web": "vite",
     "dev:api": "tsx watch scripts/dev-server.ts",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && esbuild api/index.ts --bundle --platform=node --target=node22 --format=esm --external:postgres --outfile=api/index.js",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "hash": "tsx scripts/hash.ts",
