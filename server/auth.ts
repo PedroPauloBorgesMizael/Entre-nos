@@ -92,7 +92,24 @@ export function assertSameOrigin(request: Request, cfg: Config): void {
   const forbidden = new HttpError(403, 'forbidden', 'Requisição não permitida.');
   if (request.headers.get('x-requested-with') !== CSRF_HEADER_VALUE) throw forbidden;
   const origin = request.headers.get('origin');
-  if (!origin || origin !== new URL(cfg.appUrl).origin) throw forbidden;
+  if (!origin) throw forbidden;
+
+  const appOrigin = new URL(cfg.appUrl).origin;
+  if (origin === appOrigin) return;
+
+  // Em desenvolvimento local, aceita requisições vindas de localhost / 127.0.0.1
+  if (!cfg.isProduction) {
+    try {
+      const parsed = new URL(origin);
+      if (['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)) {
+        return;
+      }
+    } catch {
+      throw forbidden;
+    }
+  }
+
+  throw forbidden;
 }
 
 // ---------------------------------------------------------------------------
