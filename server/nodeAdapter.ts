@@ -8,7 +8,8 @@ export async function serveNode(
   res: ServerResponse,
 ): Promise<void> {
   const host = req.headers.host ?? 'localhost';
-  const url = new URL(req.url ?? '/', `http://${host}`);
+  const proto = (req.headers['x-forwarded-proto'] as string) || (host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https');
+  const url = new URL(req.url ?? '/', `${proto}://${host}`);
   const headers = new Headers();
   for (const [k, v] of Object.entries(req.headers)) {
     if (Array.isArray(v)) v.forEach((x) => headers.append(k, x));
