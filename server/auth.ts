@@ -1,8 +1,13 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import type { Config } from './config';
 import type { Sql } from './db';
 import { HttpError, parseCookies } from './http';
+
+// Garante que o bcryptjs use o crypto nativo do Node em qualquer runtime serverless
+bcrypt.setRandomFallback((len: number) => {
+  return Array.from(randomBytes(len));
+});
 
 export const BCRYPT_COST = 12;
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
@@ -71,12 +76,8 @@ export function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ha, hb);
 }
 
-let dummyHash: string | null = null;
-async function getDummyHash(): Promise<string> {
-  // hash descartável para igualar o tempo de resposta quando o usuário não confere
-  dummyHash ??= await bcrypt.hash('entre-nos-dummy-password', BCRYPT_COST);
-  return dummyHash;
-}
+// Hash bcrypt válido pré-computado para tempo de resposta constante quando o usuário não confere
+const DUMMY_HASH = '$2a$12$0nzbJOr/CAwILo7kdZjSkO4MqT5UI9xUmk2Kvd6.wbTBQjcfm67B6';
 
 // ---------------------------------------------------------------------------
 // Credenciais e sessão
@@ -220,7 +221,7 @@ export async function resetThrottle(sql: Sql, scope: ThrottleScope): Promise<voi
 // ---------------------------------------------------------------------------
 
 async function verifyPassword(creds: Credentials, password: string, userOk = true): Promise<boolean> {
-  const ok = await bcrypt.compare(password, userOk ? creds.hash : await getDummyHash());
+  const ok = await bcrypt.compare(password, userOk ? creds.hash : DUMMY_HASH);
   return ok && userOk;
 }
 
