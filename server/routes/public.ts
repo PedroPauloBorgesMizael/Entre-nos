@@ -146,7 +146,9 @@ export const postConfirm: RouteHandler = async (ctx, [token]) => {
   }
 
   const answer = await confirmedAnswer(ctx, inv.id);
-  if (!answer) throw new HttpError(500, 'internal_error', 'Não foi possível concluir. Tente novamente.');
+  if (!answer) {
+    throw new HttpError(503, 'service_unavailable', 'Não foi possível carregar a confirmação. Tente novamente em instantes.');
+  }
 
   // A resposta JÁ está gravada e confirmada. Só agora disparamos o e-mail (uma única vez: apenas em 'created').
   if (outcome === 'created' && res!.out_response_id) {

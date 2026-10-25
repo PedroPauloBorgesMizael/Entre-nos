@@ -20,6 +20,7 @@ export function InvitePage() {
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState<PublicInvite | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Telas do fluxo: 1: Pergunta inicial, 2: Horário, 3: Sugestão, 4: Animação carta, 5: Sucesso final
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
@@ -72,8 +73,10 @@ export function InvitePage() {
       .catch((err) => {
         if (err instanceof ApiError) {
           setErrorStatus(err.status);
+          setErrorMessage(err.message);
         } else {
-          setErrorStatus(500);
+          setErrorStatus(503);
+          setErrorMessage('Não foi possível conectar. Tente novamente em instantes.');
         }
       })
       .finally(() => {
@@ -197,14 +200,24 @@ export function InvitePage() {
 
   // Convite inexistente ou indisponível
   if (errorStatus || !invite) {
+    const isTemp = errorStatus === 503 || errorStatus === 0;
     return (
       <main className="invite-page">
         <div className="invite-card">
           <RoseMark style={{ width: 48, height: 48, color: 'var(--c-blush)', marginBottom: 20 }} />
-          <h1 className="invite-title" style={{ fontSize: '1.8rem' }}>Convite indisponível</h1>
+          <h1 className="invite-title" style={{ fontSize: '1.8rem' }}>
+            {isTemp ? 'Aguardando conexão' : 'Convite indisponível'}
+          </h1>
           <p className="invite-message" style={{ margin: '12px 0 24px' }}>
-            Este convite não está mais ativo ou o link informado não foi encontrado.
+            {isTemp
+              ? (errorMessage || 'O servidor está iniciando ou processando a requisição. Por favor, tente novamente.')
+              : 'Este convite não está mais ativo ou o link informado não foi encontrado.'}
           </p>
+          {isTemp && (
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              Tentar novamente
+            </Button>
+          )}
         </div>
       </main>
     );

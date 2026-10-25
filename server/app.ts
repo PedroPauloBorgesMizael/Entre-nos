@@ -70,6 +70,51 @@ function defaultGetConfig(): Config {
   return cachedConfig;
 }
 
+function isDbError(err: unknown): boolean {
+  if (!err) return false;
+  if (typeof err === 'object') {
+    const e = err as Record<string, unknown>;
+    const code = String(e.code || e.errno || '');
+    const name = String(e.name || '');
+    const msg = String(e.message || '').toLowerCase();
+    if (name === 'PostgresError') return true;
+    if (
+      [
+        'ECONNREFUSED',
+        'ETIMEDOUT',
+        'ENOTFOUND',
+        'EAI_AGAIN',
+        'ECONNRESET',
+        'CONNECT_TIMEOUT',
+        'CONNECTION_CLOSED',
+        'CONNECTION_ENDED',
+        '28P01',
+        '3D000',
+        '57P01',
+        '57P03',
+        '08001',
+        '08004',
+        '08006',
+      ].includes(code)
+    ) {
+      return true;
+    }
+    if (
+      msg.includes('connection') ||
+      msg.includes('connect') ||
+      msg.includes('timeout') ||
+      msg.includes('password authentication') ||
+      msg.includes('tenant') ||
+      msg.includes('database') ||
+      msg.includes('ssl') ||
+      msg.includes('socket')
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function createApp(options: AppOptions = {}): (request: Request) => Promise<Response> {
   const getConfig = options.getConfig ?? defaultGetConfig;
   const getSql = options.getSql ?? ((cfg: Config) => getDb(cfg.databaseUrl));
@@ -113,9 +158,31 @@ export function createApp(options: AppOptions = {}): (request: Request) => Promi
         if (e.extra.retryAfterSeconds) headers['retry-after'] = String(e.extra.retryAfterSeconds);
         return errorResponse(e, headers);
       }
-      // Nunca devolver detalhes internos ao cliente
-      console.error('[api] erro inesperado:', e instanceof Error ? `${e.name}: ${e.message}` : 'desconhecido');
-      return errorResponse(new HttpError(500, 'internal_error', 'Algo deu errado. Tente novamente em instantes.'));
+
+      if (isDbError(e)) {
+        console.error('[db] Falha na comunicação com o banco de dados:', e instanceof Error ? e.message : e);
+        return errorResponse(
+          new HttpError(
+            503,
+            'database_unavailable',
+            'O banco de dados está iniciando ou temporariamente indisponível. Aguarde alguns instantes e tente novamente.',
+            { retryAfterSeconds: 3 }
+          ),
+          { 'retry-after': '3' }
+        );
+      }
+
+      // Tratamento preventivo para qualquer outro erro inesperado: nunca devolver 500 bruto
+      console.error('[api] Erro tratado na API:', e instanceof Error ? `${e.name}: ${e.message}` : e);
+      return errorResponse(
+        new HttpError(
+          503,
+          'service_unavailable',
+          'Serviço temporariamente indisponível. Aguarde alguns instantes e tente novamente.',
+          { retryAfterSeconds: 3 }
+        ),
+        { 'retry-after': '3' }
+      );
     }
   };
 }

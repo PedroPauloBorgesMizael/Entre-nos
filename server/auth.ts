@@ -1,6 +1,5 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import { SignJWT, jwtVerify } from 'jose';
 import type { Config } from './config';
 import type { Sql } from './db';
 import { HttpError, parseCookies } from './http';
@@ -8,6 +7,58 @@ import { HttpError, parseCookies } from './http';
 export const BCRYPT_COST = 12;
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
 const CSRF_HEADER_VALUE = 'entre-nos';
+
+interface JwtPayload {
+  sub: string;
+  sv: number;
+  iat: number;
+  exp: number;
+}
+
+function base64UrlEncode(data: string | Buffer): string {
+  const buf = typeof data === 'string' ? Buffer.from(data, 'utf8') : data;
+  return buf.toString('base64url');
+}
+
+function base64UrlDecode(str: string): string {
+  return Buffer.from(str, 'base64url').toString('utf8');
+}
+
+export function signSessionJwt(sessionVersion: number, secret: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: JwtPayload = {
+    sub: 'admin',
+    sv: sessionVersion,
+    iat: now,
+    exp: now + SESSION_TTL_SECONDS,
+  };
+  const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const body = base64UrlEncode(JSON.stringify(payload));
+  const unsigned = `${header}.${body}`;
+  const sig = createHmac('sha256', secret).update(unsigned).digest('base64url');
+  return `${unsigned}.${sig}`;
+}
+
+export function verifySessionJwt(token: string, secret: string): JwtPayload | null {
+  const parts = token.split('.');
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
+  const headerStr = parts[0];
+  const bodyStr = parts[1];
+  const sigStr = parts[2];
+  const unsigned = `${headerStr}.${bodyStr}`;
+  const expectedSig = createHmac('sha256', secret).update(unsigned).digest('base64url');
+  if (sigStr.length !== expectedSig.length) return null;
+  if (!timingSafeEqual(Buffer.from(sigStr), Buffer.from(expectedSig))) return null;
+  try {
+    const payload = JSON.parse(base64UrlDecode(bodyStr)) as JwtPayload;
+    if (payload.sub !== 'admin') return null;
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 /** Respostas de recuperação: correspondência exata, ignorando apenas espaços nas pontas e normalização Unicode. */
 export function normalizeAnswer(s: string): string {
@@ -49,17 +100,8 @@ export function sessionCookieName(cfg: Config): string {
   return cfg.appUrl.startsWith('https:') ? '__Host-entre_nos_session' : 'entre_nos_session';
 }
 
-function secretKey(cfg: Config): Uint8Array {
-  return new TextEncoder().encode(cfg.sessionSecret);
-}
-
 export async function createSessionCookie(cfg: Config, sessionVersion: number): Promise<string> {
-  const jwt = await new SignJWT({ sv: sessionVersion })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject('admin')
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(secretKey(cfg));
+  const jwt = signSessionJwt(sessionVersion, cfg.sessionSecret);
   const secure = cfg.appUrl.startsWith('https:') ? '; Secure' : '';
   return `${sessionCookieName(cfg)}=${jwt}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_TTL_SECONDS}${secure}`;
 }
@@ -74,15 +116,10 @@ export async function requireAdmin(request: Request, cfg: Config, sql: Sql): Pro
   const token = parseCookies(request.headers.get('cookie'))[sessionCookieName(cfg)];
   const unauthorized = new HttpError(401, 'unauthorized', 'Faça login para continuar.');
   if (!token) throw unauthorized;
-  let sv: unknown;
-  try {
-    const { payload } = await jwtVerify(token, secretKey(cfg), { algorithms: ['HS256'], subject: 'admin' });
-    sv = payload.sv;
-  } catch {
-    throw unauthorized;
-  }
+  const payload = verifySessionJwt(token, cfg.sessionSecret);
+  if (!payload) throw unauthorized;
   const creds = await getCredentials(sql, cfg);
-  if (sv !== creds.sessionVersion) throw unauthorized;
+  if (payload.sv !== creds.sessionVersion) throw unauthorized;
   return creds;
 }
 
