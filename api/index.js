@@ -22897,7 +22897,13 @@ function createApp(options = {}) {
 }
 
 // server/nodeAdapter.ts
-import { Readable } from "node:stream";
+async function readStream(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks);
+}
 async function serveNode(handler2, req, res) {
   try {
     const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
@@ -22913,26 +22919,22 @@ async function serveNode(handler2, req, res) {
     if (hasBody) {
       const anyReq = req;
       if (anyReq.body !== void 0 && anyReq.body !== null) {
-        if (typeof anyReq.body === "string") {
-          body = anyReq.body;
-        } else if (Buffer.isBuffer(anyReq.body) || anyReq.body instanceof Uint8Array) {
+        if (typeof anyReq.body === "string" || Buffer.isBuffer(anyReq.body) || anyReq.body instanceof Uint8Array) {
           body = anyReq.body;
         } else {
           body = JSON.stringify(anyReq.body);
         }
       } else if (!req.readableEnded) {
-        body = Readable.toWeb(req);
+        body = await readStream(req);
       }
     }
-    const requestInit = {
+    const request = new Request(url2, {
       method: req.method,
       headers,
-      body
-    };
-    if (body && typeof body === "object" && "getReader" in body) {
-      requestInit.duplex = "half";
-    }
-    const request = new Request(url2, requestInit);
+      body,
+      // @ts-expect-error duplex necessário para Node Request com body
+      duplex: body !== void 0 ? "half" : void 0
+    });
     const response = await handler2(request);
     const out = {};
     response.headers.forEach((value, key) => {
@@ -22944,14 +22946,16 @@ async function serveNode(handler2, req, res) {
     res.writeHead(response.status, out);
     res.end(Buffer.from(await response.arrayBuffer()));
   } catch (err) {
-    console.error("[serveNode] Erro na requisi\xE7\xE3o:", err);
+    const errorMsg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    console.error("[serveNode] Erro na requisi\xE7\xE3o:", errorMsg, err?.stack);
     if (!res.headersSent) {
       res.writeHead(503, { "content-type": "application/json; charset=utf-8" });
     }
     res.end(
       JSON.stringify({
         error: "service_unavailable",
-        message: "Servi\xE7o temporariamente indispon\xEDvel. Aguarde alguns instantes e tente novamente."
+        message: "Servi\xE7o temporariamente indispon\xEDvel. Aguarde alguns instantes e tente novamente.",
+        details: errorMsg
       })
     );
   }
