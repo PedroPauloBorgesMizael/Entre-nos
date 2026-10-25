@@ -1,0 +1,46 @@
+/* Design tokens — Entre Nós */
+:root {
+  /* paleta */
+  --c-champagne: #F3EBDD; /* fundo principal */
+  --c-ivory: #FFFCF6; /* superfícies e cartões */
+  --c-sand: #E5D7C4; /* bege secundário */
+  --c-blush: #D8BDB3; /* bege rosado */
+  --c-rose: #C58F91; /* rosa antigo — detalhes e animações */
+  --c-wine: #783F43; /* vinho terroso — ações principais */
+  --c-wine-dark: #62323A;
+  --c-coffee: #3B302A; /* texto */
+  --c-taupe: #79685B; /* texto secundário */
+  --c-gold: #B39A68; /* dourado envelhecido — só pequenos detalhes */
+  --c-line: #E6DACC; /* bordas discretas */
+  --c-danger: #8E3B3B;
+  --c-ok: #55705A;
+
+  /* tipografia (fontes empacotadas + alternativas locais) */
+  --font-serif: 'Cormorant Garamond', 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Variable', Inter, Manrope, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* raios */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+
+  /* espaçamento */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
+
+  /* sombras muito discretas */
+  --shadow-soft: 0 1px 2px rgba(59, 48, 42, 0.05), 0 8px 24px rgba(59, 48, 42, 0.06);
+  --shadow-lift: 0 2px 4px rgba(59, 48, 42, 0.06), 0 14px 32px rgba(59, 48, 42, 0.09);
+
+  /* movimento */
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.5, 1);
+
+  --tap: 48px; /* alvo mínimo de toque */
+}

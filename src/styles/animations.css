@@ -1,0 +1,297 @@
+/* Animações e componentes visuais do Entre Nós */
+
+/* ---------- Pétalas de Rosa ---------- */
+.petals {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.petal {
+  position: absolute;
+  top: -40px;
+  width: var(--size, 16px);
+  height: var(--size, 16px);
+  opacity: var(--op, 0.7);
+  animation:
+    petal-fall var(--fall, 5s) linear var(--delay, 0s) forwards,
+    petal-sway var(--sway, 2s) ease-in-out var(--delay, 0s) infinite alternate;
+  will-change: transform;
+}
+
+.petal__shape {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 0 50% 50%;
+  transform: rotate(45deg);
+}
+
+.petal__shape--0 {
+  background: radial-gradient(circle at 30% 30%, #e6a8ab, #c58f91 75%);
+  box-shadow: 0 1px 4px rgba(120, 63, 67, 0.15);
+}
+
+.petal__shape--1 {
+  background: radial-gradient(circle at 30% 30%, #ecd0c9, #d8bdb3 75%);
+  box-shadow: 0 1px 4px rgba(120, 63, 67, 0.12);
+}
+
+.petal__shape--2 {
+  background: radial-gradient(circle at 30% 30%, #d89699, #783f43 90%);
+  box-shadow: 0 1px 4px rgba(120, 63, 67, 0.18);
+}
+
+@keyframes petal-fall {
+  0% {
+    top: -40px;
+    transform: translateX(0) rotate(0deg);
+  }
+  100% {
+    top: calc(100vh + 40px);
+    transform: translateX(var(--drift, 40px)) rotate(var(--spin, 360deg));
+  }
+}
+
+@keyframes petal-sway {
+  0% {
+    margin-left: -18px;
+  }
+  100% {
+    margin-left: 18px;
+  }
+}
+
+/* ---------- Animação da Carta e do Coração ---------- */
+.letter-stage {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.envelope-wrapper {
+  position: relative;
+  width: 240px;
+  height: 160px;
+  perspective: 800px;
+  transition: transform 1s var(--ease-spring), opacity 0.8s ease;
+}
+
+/* Envelope base */
+.envelope {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #ecdcc9;
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lift);
+  overflow: visible;
+}
+
+/* Aba superior do envelope (abre e fecha) */
+.envelope__flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 120px solid transparent;
+  border-right: 120px solid transparent;
+  border-top: 85px solid #dfcfbc;
+  transform-origin: top center;
+  transform: rotateX(180deg); /* Começa aberto para receber a carta */
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+
+.envelope__flap.is-closed {
+  transform: rotateX(0deg);
+  z-index: 30;
+  border-top-color: #d8c7b3;
+}
+
+/* Bolso frontal do envelope */
+.envelope__pocket {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 120px solid #e5d4c1;
+  border-right: 120px solid #e5d4c1;
+  border-bottom: 90px solid #dfcfbc;
+  border-top: 70px solid transparent;
+  border-radius: 0 0 8px 8px;
+  z-index: 20;
+}
+
+/* A folha de papel / carta que entra no envelope */
+.letter-paper {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  width: 200px;
+  height: 140px;
+  background: var(--c-ivory);
+  border: 1px solid #ebd9c8;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(59, 48, 42, 0.08);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 15;
+  transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease;
+  transform: translateY(0);
+}
+
+.letter-paper.slide-in {
+  transform: translateY(75px) scale(0.96);
+  opacity: 0.9;
+}
+
+.letter-paper__line {
+  height: 6px;
+  border-radius: 3px;
+  background: #f0e3d5;
+}
+
+.letter-paper__line--short {
+  width: 60%;
+}
+
+.letter-paper__line--medium {
+  width: 80%;
+}
+
+/* Coração animado que desce para a carta */
+.heart-float {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  color: var(--c-wine);
+  font-size: 32px;
+  z-index: 25;
+  opacity: 0;
+  transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+  filter: drop-shadow(0 4px 8px rgba(120, 63, 67, 0.25));
+}
+
+.heart-float.show {
+  transform: translateX(-50%) scale(1.1);
+  opacity: 1;
+}
+
+.heart-float.drop-in {
+  transform: translateX(-50%) translateY(75px) scale(0.7);
+  opacity: 0.85;
+}
+
+/* Selo de cera com coração */
+.wax-seal {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #964f54, #663236);
+  box-shadow: 0 2px 6px rgba(102, 50, 54, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f7e6e7;
+  z-index: 40;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wax-seal.sealed {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Partículas de brilho ao selar */
+.sparkle-group {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 45;
+}
+
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-gold);
+  opacity: 0;
+  transform: scale(0);
+  animation: sparkle-burst 0.7s ease-out forwards;
+}
+
+.sparkle:nth-child(1) { top: 0; left: 50%; animation-delay: 0.05s; }
+.sparkle:nth-child(2) { top: 25%; right: 0; animation-delay: 0.1s; }
+.sparkle:nth-child(3) { bottom: 0; left: 60%; animation-delay: 0.15s; }
+.sparkle:nth-child(4) { top: 40%; left: 0; animation-delay: 0.08s; }
+
+@keyframes sparkle-burst {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.4); opacity: 0.9; }
+  100% { transform: scale(0.4) translateY(-12px); opacity: 0; }
+}
+
+/* Envio ao universo: eleva o envelope, diminui e desaparece suavemente */
+.envelope-wrapper.flying-away {
+  transform: translateY(-220px) scale(0.3) rotate(-6deg);
+  opacity: 0;
+}
+
+/* Efeito estelar / poeira sutil ao voar */
+.stellar-trail {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 80px;
+  background: linear-gradient(to top, transparent, rgba(179, 154, 104, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.envelope-wrapper.flying-away + .stellar-trail {
+  opacity: 1;
+}
+
+/* Reduced motion fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .petal {
+    animation: none !important;
+    display: none !important;
+  }
+  .envelope-wrapper,
+  .letter-paper,
+  .heart-float,
+  .envelope__flap,
+  .wax-seal {
+    transition-duration: 0.1s !important;
+  }
+  .envelope-wrapper.flying-away {
+    transform: none !important;
+    opacity: 0.3 !important;
+  }
+}

@@ -1,0 +1,24 @@
+# dependências e build
+node_modules/
+dist/
+.vercel/
+*.tsbuildinfo
+
+# segredos — NUNCA versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# testes / dados locais
+coverage/
+playwright-report/
+test-results/
+.tmp/
+.pgdata/
+
+# sistema
+.DS_Store
+Thumbs.db
+*.log

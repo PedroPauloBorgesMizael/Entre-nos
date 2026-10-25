@@ -1,0 +1,315 @@
+/* Estilos da Área Pública — Entre Nós */
+
+.invite-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--s-5) var(--s-4);
+  background-color: var(--c-champagne);
+  background-image: radial-gradient(circle at 50% 20%, rgba(255, 252, 246, 0.6) 0%, transparent 80%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.invite-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--c-ivory);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  padding: var(--s-6) var(--s-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: transform 0.4s var(--ease-soft), box-shadow 0.4s var(--ease-soft);
+}
+
+@media (min-width: 640px) {
+  .invite-card {
+    padding: var(--s-7) var(--s-6);
+  }
+}
+
+/* Moldura de fotografia pessoal */
+.invite-photo-frame {
+  margin-bottom: var(--s-5);
+  position: relative;
+}
+
+.invite-photo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--c-ivory);
+  box-shadow: 0 4px 16px rgba(59, 48, 42, 0.12), 0 0 0 1px var(--c-line);
+}
+
+@media (min-width: 640px) {
+  .invite-photo {
+    width: 130px;
+    height: 130px;
+  }
+}
+
+.invite-header-badge {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--c-gold);
+  margin-bottom: var(--s-3);
+  font-weight: 600;
+}
+
+.invite-title {
+  font-size: 2.1rem;
+  line-height: 1.18;
+  color: var(--c-coffee);
+  margin-bottom: var(--s-3);
+}
+
+@media (min-width: 640px) {
+  .invite-title {
+    font-size: 2.5rem;
+  }
+}
+
+.invite-message {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--c-taupe);
+  margin-bottom: var(--s-6);
+  max-width: 380px;
+  white-space: pre-line;
+}
+
+/* Área de botões da Tela 1 */
+.invite-actions-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+@media (min-width: 440px) {
+  .invite-actions-wrap {
+    flex-direction: row;
+    gap: var(--s-4);
+  }
+}
+
+.btn-yes {
+  min-width: 140px;
+  z-index: 5;
+}
+
+/* Botão Não: touch-action manipulation, user-select none */
+.btn-no {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.btn-no--evading {
+  position: fixed !important;
+  transition: top 0.25s var(--ease-spring), left 0.25s var(--ease-spring);
+  box-shadow: var(--shadow-lift);
+}
+
+/* Tela 2: Slots de Horários */
+.slots-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-bottom: var(--s-6);
+  text-align: left;
+}
+
+.slot-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--c-ivory);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-soft);
+  outline: none;
+  text-align: left;
+}
+
+.slot-card:hover {
+  border-color: var(--c-blush);
+  background: #fffdfa;
+}
+
+.slot-card.is-selected {
+  border-color: var(--c-wine);
+  background: #fbf6f3;
+  box-shadow: 0 0 0 1px var(--c-wine);
+}
+
+.slot-card:focus-visible {
+  outline: 2px solid var(--c-wine);
+  outline-offset: 2px;
+}
+
+.slot-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slot-card__date {
+  font-weight: 600;
+  color: var(--c-coffee);
+  font-size: 1rem;
+}
+
+.slot-card__weekday {
+  font-size: 0.85rem;
+  color: var(--c-taupe);
+  text-transform: capitalize;
+}
+
+.slot-card__time {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--c-wine);
+  font-weight: 600;
+}
+
+.slot-radio-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--c-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--s-3);
+  flex-shrink: 0;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.slot-card.is-selected .slot-radio-indicator {
+  border-color: var(--c-wine);
+  background-color: var(--c-wine);
+}
+
+.slot-radio-indicator__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--c-ivory);
+}
+
+/* Tela 3: Sugestão de Date */
+.options-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--s-4);
+  justify-content: center;
+  width: 100%;
+}
+
+.option-chip {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--c-line);
+  background: var(--c-champagne);
+  color: var(--c-coffee);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.option-chip:hover {
+  border-color: var(--c-blush);
+}
+
+.option-chip.is-selected {
+  background: var(--c-wine);
+  color: var(--c-ivory);
+  border-color: var(--c-wine);
+}
+
+/* Tela Final: Resumo */
+.summary-box {
+  width: 100%;
+  background: #fbf7f1;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: var(--s-4) var(--s-5);
+  margin: var(--s-5) 0 var(--s-6) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  text-align: left;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(230, 218, 204, 0.6);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  font-size: 0.88rem;
+  color: var(--c-taupe);
+}
+
+.summary-val {
+  font-weight: 500;
+  color: var(--c-coffee);
+  text-align: right;
+}
+
+/* Indicador de progresso de telas */
+.steps-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--s-5);
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-sand);
+  transition: background-color 0.3s;
+}
+
+.step-dot.is-active {
+  background: var(--c-wine);
+  width: 20px;
+  border-radius: 4px;
+}
+
+.step-dot.is-completed {
+  background: var(--c-rose);
+}
