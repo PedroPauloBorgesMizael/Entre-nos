@@ -134,11 +134,14 @@ cp .env.example .env.local
 O projeto inclui um utilitário CLI interativo para gerar hashes bcrypt com segurança (sem ecoar a digitação no terminal):
 
 ```bash
-# Para gerar a senha inicial do administrador:
-npm run hash
+# Opção 1: Passando diretamente o valor entre aspas (mais fácil e rápido)
+npm run hash -- "sua-senha-aqui"
+npm run hash:answer -- "sua-resposta-1"
+npm run hash:answer -- "sua-resposta-2"
 
-# Para gerar o hash das respostas das perguntas de recuperação:
-npm run hash -- --answer
+# Opção 2: Modo interativo (digitação oculta no terminal)
+npm run hash
+npm run hash:answer
 ```
 Copie os hashes gerados e preencha as variáveis `ADMIN_INITIAL_PASSWORD_HASH`, `ADMIN_RECOVERY_ANSWER_1_HASH` e `ADMIN_RECOVERY_ANSWER_2_HASH` no seu `.env.local`.
 

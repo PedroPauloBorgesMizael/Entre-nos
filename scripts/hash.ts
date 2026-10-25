@@ -1,6 +1,11 @@
 // Gera hashes bcrypt LOCALMENTE para senha e respostas de recuperação.
-// Uso:  npm run hash            (pergunta com entrada oculta)
-//       npm run hash -- --answer  (aplica a normalização das respostas de recuperação)
+// Uso interativo:
+//   npm run hash                (pergunta a senha com entrada oculta)
+//   npm run hash -- --answer    (pergunta a resposta de recuperação)
+//
+// Uso direto via linha de comando:
+//   npm run hash "minha-senha"
+//   npm run hash --answer "minha-resposta"
 import bcrypt from 'bcryptjs';
 import { normalizeAnswer, BCRYPT_COST } from '../server/auth';
 
@@ -9,7 +14,6 @@ function ask(prompt: string): Promise<string> {
     process.stdout.write(prompt);
     const stdin = process.stdin;
     if (!stdin.isTTY) {
-      // entrada por pipe (ex.: automação): lê uma linha
       let buf = '';
       stdin.setEncoding('utf8');
       stdin.on('data', (d) => {
@@ -44,15 +48,58 @@ function ask(prompt: string): Promise<string> {
   });
 }
 
-const isAnswer = process.argv.includes('--answer');
-const label = isAnswer ? 'Resposta de recuperação' : 'Senha';
-const first = await ask(`${label} (a entrada não é exibida): `);
-const second = await ask('Repita: ');
-if (first !== second || first.length === 0) {
-  console.error('\nOs valores não conferem (ou estão vazios). Nada foi gerado.');
-  process.exit(1);
+async function main() {
+  const rawArgs = process.argv.slice(2);
+  const isAnswer = rawArgs.includes('--answer');
+
+  // Filtra flags conhecidas
+  const otherArgs = rawArgs.filter((a) => a !== '--answer');
+
+  let value = '';
+
+  if (otherArgs.length > 0) {
+    // Se o usuário passou diretamente como argumento (ex.: npm run hash "minha-senha" ou --minha-senha)
+    let candidate = otherArgs.join(' ');
+    // Se digitou acidentalmente com traços no início (ex.: --maria), remove os traços
+    if (candidate.startsWith('--')) {
+      candidate = candidate.replace(/^--+/, '');
+    }
+    value = candidate;
+    console.log(`\nGerando hash para ${isAnswer ? 'resposta de recuperação' : 'senha'} informada via argumento...`);
+  } else {
+    const label = isAnswer ? 'Resposta de recuperação' : 'Senha';
+    const first = await ask(`${label} (a entrada não é exibida): `);
+    const second = await ask('Repita: ');
+    if (first !== second || first.length === 0) {
+      console.error('\nOs valores não conferem (ou estão vazios). Nada foi gerado.');
+      process.exit(1);
+    }
+    value = first;
+  }
+
+  if (!value || value.trim().length === 0) {
+    console.error('\nNenhum valor informado. Nada foi gerado.');
+    process.exit(1);
+  }
+
+  const finalValue = isAnswer ? normalizeAnswer(value) : value;
+  const hash = await bcrypt.hash(finalValue, BCRYPT_COST);
+
+  console.log('\n======================================================================');
+  console.log(`HASH GERADO COM SUCESSO (${isAnswer ? 'RESPOSTA DE RECUPERAÇÃO' : 'SENHA'})`);
+  console.log('======================================================================');
+  console.log('\nCopie o hash abaixo (com as aspas simples) para a variável correspondente:\n');
+  console.log(`'${hash}'\n`);
+  console.log('Exemplo no .env.local ou na Vercel:');
+  if (isAnswer) {
+    console.log(`ADMIN_RECOVERY_ANSWER_1_HASH='${hash}'`);
+  } else {
+    console.log(`ADMIN_INITIAL_PASSWORD_HASH='${hash}'`);
+  }
+  console.log('======================================================================\n');
 }
-const hash = await bcrypt.hash(isAnswer ? normalizeAnswer(first) : first, BCRYPT_COST);
-console.log('\nCopie o hash abaixo, exatamente como está, para a variável de ambiente correspondente');
-console.log('(no .env.local use aspas simples ao redor, por causa dos "$"):\n');
-console.log(hash);
+
+main().catch((err) => {
+  console.error('\nErro ao gerar hash:', err);
+  process.exit(1);
+});
