@@ -1,6 +1,6 @@
-// Ponto de entrada oficial serverless da Vercel: api/index.ts
-import { createApp } from '../server/app';
-import { serveNode } from '../server/nodeAdapter';
+// Ponto de entrada do backend serverless (fonte TypeScript)
+import { createApp } from './app';
+import { serveNode } from './nodeAdapter';
 
 let cachedApp: ReturnType<typeof createApp> | null = null;
 function getApp() {

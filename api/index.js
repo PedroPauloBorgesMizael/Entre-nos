@@ -22944,7 +22944,7 @@ async function serveNode(handler2, req, res) {
   }
 }
 
-// api/index.ts
+// server/index.ts
 var cachedApp = null;
 function getApp() {
   if (!cachedApp) {
