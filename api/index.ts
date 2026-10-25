@@ -10,7 +10,7 @@ function getApp() {
   return cachedApp;
 }
 
-async function handler(req: any, res: any) {
+export default async function handler(req: any, res: any) {
   try {
     const app = getApp();
     if (res && typeof res.writeHead === 'function') {
@@ -39,12 +39,3 @@ async function handler(req: any, res: any) {
     });
   }
 }
-
-export default handler;
-
-try {
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = handler;
-    module.exports.default = handler;
-  }
-} catch {}
