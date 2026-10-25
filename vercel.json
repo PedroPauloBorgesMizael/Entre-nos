@@ -1,17 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "functions": {
-    "api/**": {
-      "includeFiles": [
-        "server/**",
-        "shared/**"
-      ]
-    }
-  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/api", "destination": "/api" },
+    { "source": "/api/test", "destination": "/api/test" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/api", "destination": "/api/index.js" },
     { "source": "/((?!api/|assets/|favicon|.*\\..*).*)", "destination": "/index.html" }
   ],
   "headers": [
