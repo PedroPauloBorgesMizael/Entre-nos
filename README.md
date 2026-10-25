@@ -294,13 +294,16 @@ O projeto conta com automação de testes cobrindo toda a pilha.
 # 1. Checagem estrita de tipos TypeScript
 npm run typecheck
 
-# 2. Testes unitários e de integração com PostgreSQL real (Vitest)
+# 2. Smoke test rápido do roteamento e segurança da API (< 1s)
+npm run smoke
+
+# 3. Testes unitários e de integração com PostgreSQL real (Vitest)
 npm test
 
-# 3. Testes End-to-End no navegador (Playwright - Desktop e Mobile)
+# 4. Testes End-to-End no navegador (Playwright - Desktop e Mobile)
 npm run test:e2e
 
-# 4. Pipeline completo
+# 5. Pipeline completo
 npm run test:all
 ```
 
